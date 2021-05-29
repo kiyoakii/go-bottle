@@ -61,6 +61,7 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 
 	n := root.search(realParts, 0)
 
+	// construct parameters from real path
 	if n != nil {
 		parts := parse(n.pattern)
 		for i, part := range parts {
@@ -71,18 +72,19 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 				params[part[1:]] = strings.Join(realParts[i:], "/")
 				break
 			}
-			return n, params
 		}
+		return n, params
 	}
 
 	return nil, nil
 }
 
 func (r *router) handle(c *Context) {
-	key := c.Method + "-" + c.Path
-	handler, ok := r.handlers[key]
-	if ok {
-		handler(c)
+	n, params := r.getRoute(c.Method, c.Path)
+	if n != nil {
+		c.Params = params
+		key := c.Method + "-" + n.pattern
+		r.handlers[key](c)
 	} else {
 		c.Text(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
 	}
