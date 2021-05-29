@@ -37,6 +37,15 @@ func main() {
 		c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
 	})
 
+	r.GET("/hello/:name", func(c *bottle.Context) {
+		// expect /hello/jin
+		c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)
+	})
+
+	r.GET("/assets/*filepath", func(c *bottle.Context) {
+		c.JSON(http.StatusOK, bottle.H{"filepath": c.Param("filepath")})
+	})
+
 	r.POST("/login", func(c *bottle.Context) {
 		c.JSON(http.StatusOK, bottle.H{
 			"username": c.PostForm("username"),
