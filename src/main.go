@@ -54,6 +54,9 @@ func main() {
 			// expect /hello?name=jin
 			c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
 		})
+
+		v1.Static("/assets", "/Users/nabokov/scripts")
+
 	}
 
 	v2 := app.Group("/v2")
