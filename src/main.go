@@ -1,29 +1,8 @@
 package main
 
-/*
-(1)
-$ curl -i http://localhost:9999/
-HTTP/1.1 200 OK
-Date: Mon, 12 Aug 2019 16:52:52 GMT
-Content-Length: 18
-Content-Type: text/html; charset=utf-8
-<h1>Hello bottle</h1>
-
-(2)
-$ curl "http://localhost:9999/hello?name=jin"
-hello jin, you're at /hello
-
-(3)
-$ curl "http://localhost:9999/login" -X POST -d 'username=jinli&password=1234'
-{"password":"1234","username":"jinli"}
-
-(4)
-$ curl "http://localhost:9999/xxx"
-404 NOT FOUND: /xxx
-*/
-
 import (
 	"bottle"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -41,7 +20,7 @@ func onlyForV2() bottle.HandlerFunc {
 }
 
 func main() {
-	app := bottle.New()
+	app := bottle.Default()
 	app.Use(bottle.Logger())
 	app.LoadHTMLGlob("templates/*")
 
@@ -76,9 +55,12 @@ func main() {
 		})
 	}
 
-	app.GET("/hello", func(c *bottle.Context) {
+	app.GET("/panic", func(c *bottle.Context) {
 		// expect /hello?name=jin
-		c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
+		text := []string{"lorem ipsum"}
+		b := text[100]
+		fmt.Println(b)
+
 	})
 
 	app.GET("/hello/:name", func(c *bottle.Context) {
