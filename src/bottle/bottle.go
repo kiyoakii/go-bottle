@@ -1,6 +1,7 @@
 package bottle
 
 import (
+	"html/template"
 	"net/http"
 	"path"
 	"strings"
@@ -9,16 +10,20 @@ import (
 type HandlerFunc func(*Context)
 
 type RouterGroup struct {
-	prefix string
+	prefix      string
 	middlewares []HandlerFunc
-	parent *RouterGroup			// for group nesting
-	engine *Engine				// all groups share the same engine
+	parent      *RouterGroup // for group nesting
+	engine      *Engine      // all groups share the same engine
 }
 
+// Engine is a normally a global unique being,
+// it contains several groups, and can act as the root of all groups
 type Engine struct {
 	*RouterGroup
-	router *router
-	groups []*RouterGroup
+	router        *router
+	groups        []*RouterGroup
+	htmlTemplates *template.Template // for html rendering
+	funcMap       template.FuncMap   // for html rendering
 }
 
 func New() *Engine {
@@ -29,8 +34,16 @@ func New() *Engine {
 	return engine
 }
 
+func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
+	engine.funcMap = funcMap
+}
+
+func (engine *Engine) LoadHTMLGlob(pattern string) {
+	engine.htmlTemplates = template.Must(template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
+}
+
 func (group *RouterGroup) Group(prefix string) *RouterGroup {
-	newGroup := &RouterGroup {
+	newGroup := &RouterGroup{
 		prefix: group.prefix + prefix,
 		parent: group,
 		engine: group.engine,
@@ -41,7 +54,6 @@ func (group *RouterGroup) Group(prefix string) *RouterGroup {
 
 func (group *RouterGroup) addRoute(method string, comp string, handler HandlerFunc) {
 	pattern := group.prefix + comp
-	//log.Printf("Route %4s - %s", method, pattern)
 	group.engine.router.addRoute(method, pattern, handler)
 }
 
@@ -87,10 +99,10 @@ func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	ctx := newContext(w, req)
 	ctx.handlers = middlewares
+	ctx.engine = engine
 	engine.router.handle(ctx)
 }
 
 func (engine *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, engine)
 }
-

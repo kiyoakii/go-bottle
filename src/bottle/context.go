@@ -9,6 +9,7 @@ import (
 type D map[string]interface{}
 
 type Context struct {
+	engine *Engine
 	// original objects
 	Writer  http.ResponseWriter
 	Request *http.Request
@@ -89,8 +90,13 @@ func (c *Context) Raw(code int, data []byte) {
 	c.Writer.Write(data)
 }
 
-func (c *Context) HTML(code int, html string) {
+func (c *Context) HTML(code int, name string, data interface{}) {
 	c.SetHeader("Content-Type", "text/html")
+	err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data)
+	if err != nil {
+		c.Fail(500, err.Error())
+	}
 	c.Status(code)
-	c.Writer.Write([]byte(html))
 }
+
+
