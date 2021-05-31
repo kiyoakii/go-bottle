@@ -24,11 +24,25 @@ $ curl "http://localhost:9999/xxx"
 
 import (
 	"bottle"
+	"log"
 	"net/http"
+	"time"
 )
+
+func onlyForV2() bottle.HandlerFunc {
+	return func(c *bottle.Context) {
+		// Start timer
+		t := time.Now()
+		// if a server error occurred
+		c.Fail(500, "Internal Server Error")
+		// Calculate resolution time
+		log.Printf("[%d] %s in %v for group v2", c.StatusCode, c.Request.RequestURI, time.Since(t))
+	}
+}
 
 func main() {
 	app := bottle.New()
+	app.Use(bottle.Logger())
 
 	v1 := app.Group("/v1")
 	{
@@ -43,6 +57,7 @@ func main() {
 	}
 
 	v2 := app.Group("/v2")
+	v2.Use(onlyForV2()) // v2 group middleware
 	{
 		v2.GET("/hello/:name", func(c *bottle.Context) {
 			c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)
