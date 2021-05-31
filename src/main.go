@@ -28,30 +28,57 @@ import (
 )
 
 func main() {
-	r := bottle.New()
-	r.GET("/", func(c *bottle.Context) {
+	app := bottle.New()
+
+	v1 := app.Group("/v1")
+	{
+		v1.GET("/", func(c *bottle.Context) {
+			c.HTML(http.StatusOK, "<h1>Hello Bottle</h1>")
+		})
+
+		v1.GET("/hello", func(c *bottle.Context) {
+			// expect /hello?name=jin
+			c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
+		})
+	}
+
+	v2 := app.Group("/v2")
+	{
+		v2.GET("/hello/:name", func(c *bottle.Context) {
+			c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)
+		})
+
+		v2.POST("/login", func(c *bottle.Context) {
+			c.JSON(http.StatusOK, bottle.D{
+				"username": c.PostForm("username"),
+				"password": c.PostForm("password"),
+			})
+		})
+	}
+
+	app.GET("/", func(c *bottle.Context) {
 		c.HTML(http.StatusOK, "<h1>Hello bottle</h1>")
 	})
-	r.GET("/hello", func(c *bottle.Context) {
+	app.GET("/hello", func(c *bottle.Context) {
 		// expect /hello?name=jin
 		c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
 	})
 
-	r.GET("/hello/:name", func(c *bottle.Context) {
+	app.GET("/hello/:name", func(c *bottle.Context) {
 		// expect /hello/jin
 		c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)
 	})
 
-	r.GET("/assets/*filepath", func(c *bottle.Context) {
-		c.JSON(http.StatusOK, bottle.H{"filepath": c.Param("filepath")})
+	app.GET("/assets/*filepath", func(c *bottle.Context) {
+		c.JSON(http.StatusOK, bottle.D{"filepath": c.Param("filepath")})
 	})
 
-	r.POST("/login", func(c *bottle.Context) {
-		c.JSON(http.StatusOK, bottle.H{
+	app.POST("/login", func(c *bottle.Context) {
+		c.JSON(http.StatusOK, bottle.D{
 			"username": c.PostForm("username"),
 			"password": c.PostForm("password"),
 		})
 	})
 
-	r.Run(":9999")
+	app.Run(":9999")
 }
