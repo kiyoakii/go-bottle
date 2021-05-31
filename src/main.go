@@ -43,11 +43,14 @@ func onlyForV2() bottle.HandlerFunc {
 func main() {
 	app := bottle.New()
 	app.Use(bottle.Logger())
+	app.LoadHTMLGlob("templates/*")
 
 	v1 := app.Group("/v1")
 	{
+		v1.Static("/assets", "static")
+
 		v1.GET("/", func(c *bottle.Context) {
-			c.HTML(http.StatusOK, "<h1>Hello Bottle</h1>")
+			c.HTML(http.StatusOK, "css.html", nil)
 		})
 
 		v1.GET("/hello", func(c *bottle.Context) {
@@ -55,7 +58,6 @@ func main() {
 			c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
 		})
 
-		v1.Static("/assets", "/Users/nabokov/scripts")
 
 	}
 
@@ -74,9 +76,6 @@ func main() {
 		})
 	}
 
-	app.GET("/", func(c *bottle.Context) {
-		c.HTML(http.StatusOK, "<h1>Hello bottle</h1>")
-	})
 	app.GET("/hello", func(c *bottle.Context) {
 		// expect /hello?name=jin
 		c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
@@ -85,10 +84,6 @@ func main() {
 	app.GET("/hello/:name", func(c *bottle.Context) {
 		// expect /hello/jin
 		c.Text(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)
-	})
-
-	app.GET("/assets/*filepath", func(c *bottle.Context) {
-		c.JSON(http.StatusOK, bottle.D{"filepath": c.Param("filepath")})
 	})
 
 	app.POST("/login", func(c *bottle.Context) {
