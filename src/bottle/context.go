@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-type H map[string]interface{}
+type D map[string]interface{}
 
 type Context struct {
 	// original objects
